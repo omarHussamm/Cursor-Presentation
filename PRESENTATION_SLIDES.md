@@ -24,181 +24,147 @@ mdc: true
 layout: two-cols
 ---
 
-## What We're Building
+## Core Features
 
-### Task Management API
+**Task Management Backend:**
+- Create, update, delete tasks
+- Filter by status & priority
+- Sort & pagination
+- Swagger API documentation
+
+
+::right::
+
+<br>
+<br>
 
 **Tech Stack:**
 - Golang 1.21+ with Gin
 - GORM ORM + PostgreSQL
 - Docker for database
 
-**The golden rule:**
-- You are the driver. AI is the copilot.
 
-::right::
+---
 
 ## This Workshop
 
-**About:**
-- ✅ Using AI as a powerful **assistant**
-- ✅ Maintaining **code quality** and **security**
-- ✅ Knowing when to trust AI vs when to take control
+**You will learn to:**
+- **Set standards first** - Define your rules before AI generates code
+- **Review systematically** - Know what to look for in AI-generated code
+- **Balance control** - When to trust AI vs when to take the wheel
 
-**NOT about:**
+**And not tot:**
 - ❌ Blindly accepting AI suggestions
 - ❌ Copy-paste development
+
+
+## The Golden Rule
+
+#### You are the driver. AI is the copilot. You are responsible for what it does.
 
 
 ---
 
 ## Workshop Agenda
-- Understanding Cursor
+<br>
+
+- Introducing Cursor
 - Setting Standards (.cursorrules)
-- Lab 1: Initialize app
-- Lab 2: Task filtering with review cycle
-- MCP explanation
+- Lab 1: Initialize Task Management API
+- Lab 2: Task Filtering Task with Cursor Review Cycle
+- MCP Explanation
 - Lab 3: Database with MCP
-- Critical lessons
+- Additional Cursor Tips & Tricks
 - Q&A
+
+---
+
+## Part 1: Introducing Cursor
+<br>
+
+- What is Cursor
+- Cursor Editing Tools
+- Cursor Context Awarness
+- Cursor Risks
+
+
+---
+
+
+## What is Cursor?
+<br>
+
+- A modern code editor built on VS Code, enhanced with native AI features
+- Your context-aware AI pair programmer, right in your editor
+- Supports multiple AI models for different coding needs
+- Easily monitor and manage AI usage in Settings → Models
+
+---
+
+## Cursor Editing Tools
+<br>
+
+- Inline Edit
+- Autocomplete (Tab)
+- Chat Panel Ask Mode
+- Chat Panel Agent Mode 
+- Terminal Inline Ask
+
+---
+
+
+## Give AI the Right Context
+
+When asking AI for help, **be specific and point it to the right place.**  
+Use "@" commands to guide the AI to the files, folders, or docs you want it to use.
+
+<br>
+
+| Command      | What it does                |
+|--------------|----------------------------|
+| `@codebase`  | Search whole project (slow) |
+| `@files`     | Specific files (fast)       |
+| `@folder`    | Directory                   |
+| `@git`       | Git history/diffs           |
+| `@docs`      | External docs               |
+
+---
+
+## Example: Vague vs. Specific
+
+❌ **Vague:**  
+> Fix authentication
+
+✅ **Specific:**  
+> @files auth_handler.go  
+> Fix JWT token validation to check expiration.  
+> Follow error handling in @files error_handler.go
+
+<br>
+
+**Tip:**  
+The more context you give, the better the AI can help!
+
+---
+
+
+## AI can be a powerful tool, but it comes with real risks:
+<br>
+
+- Can hallucinate facts or invent APIs
+- May use outdated/deprecated libraries
+- Security is not guaranteed (e.g., SQL injection, XSS)
+- Best practices? Sometimes, but not always
+- Can overcomplicate simple problems
+- Might ignore your project’s standards
+
 
 ---
 layout: center
 class: text-center
 ---
 
-# Part 1: Understanding Cursor
-
----
-
-## Cursor Basics
-
-### What is Cursor?
-
-- VS Code fork with native AI
-- Context-aware pair programmer
-- Multiple AI models available
-- Monitor usage: Settings → Models
-
----
-layout: two-cols
-class: text-sm
----
-
-## Four Ways to Use Cursor
-
-<br>
-
-### 1. Inline Edit (Cmd/Ctrl + K)
-```
-Select code → Cmd+K
-Describe change → Accept
-```
-Fast, targeted edits
-
-### 2. Chat Panel (Cmd/Ctrl + L)
-```
-Ask questions
-Get examples
-Understand code
-```
-Exploratory learning
-
-::right::
-
-### 3. Autocomplete (Tab)
-```
-Type → AI suggests
-Tab to accept
-```
-Fastest for patterns (verify!)
-
-### 4. Composer (Cmd/Ctrl + I)
-```
-Multi-file operations
-```
-Use sparingly, high mistake rate
-
----
-layout: two-cols
-class: text-sm
----
-
-## Context is Everything
-
-::left::
-
-### The @ Commands
-
-```
-@codebase - Search project (slow)
-@files    - Specific files (fast)
-@folder   - Directory
-@git      - Git history/diffs
-@docs     - External docs
-```
-
-::right::
-
-### Example
-
-❌ **Vague:** "Fix authentication"
-
-✅ **Specific:**
-```
-"@files auth_handler.go 
-Fix JWT token validation 
-to check expiration.
-
-Follow error handling in 
-@files error_handler.go"
-```
-
----
-layout: two-cols
-class: text-sm
----
-
-## AI Makes Mistakes
-
-::left::
-
-### Common Errors
-
-**Outdated libraries:**
-```go
-// ❌ Deprecated
-import "github.com/dgrijalva/jwt-go"
-
-// ✅ Current
-import "github.com/golang-jwt/jwt/v5"
-```
-
-**Security issues:**
-```go
-// ❌ SQL injection
-db.Where("id = " + input)
-
-// ✅ Safe
-db.Where("id = ?", input)
-```
-
-::right::
-
-**Over-engineering:**
-```
-Ask: "validate email"
-
-Get: 200 lines of regex,
-     DNS check,
-     disposable detection
-
-Need: validator.IsEmail(email)
-```
-
-<br>
-
-### 🔍 Always Review!
+# Lab 1: Initialize the project
 
 ---
 layout: center
@@ -295,163 +261,6 @@ Should I [option A] or [option B]?"
 
 Save it in project root before Lab 1!
 
----
-layout: center
-class: text-center
----
-
-# Lab 1: Initialize Golang App
-## 15 minutes
-
----
-
-## Lab 1 - Objective
-
-**Goal:** Set up production-ready Go API structure
-
-**What You'll Learn:**
-- Writing clear, specific prompts with .cursorrules
-- Reviewing AI-generated structure
-- Validating setup works
-- Ensuring AI follows YOUR standards
-
-**Success Criteria:**
-- [ ] Project follows .cursorrules standards
-- [ ] Dependencies are appropriate
-- [ ] Database setup works
-- [ ] You understand every file
-
----
-
-## Lab 1 - The Prompt
-
-```
-Create a Go project structure for Task Management API.
-
-Use .cursorrules file for all standards.
-
-Technology:
-- Go 1.21+, Gin, GORM, PostgreSQL
-- Follow architecture in .cursorrules
-
-Structure:
-- cmd/api/main.go
-- internal/handlers, models, services, database
-- config/, .env.example, docker-compose.yml (PostgreSQL only), Makefile
-
-Requirements:
-- Go modules
-- Only necessary dependencies
-- Comments explaining directories
-- Follow .cursorrules conventions
-```
-
-**Execute in Cursor chat after creating .cursorrules**
-
----
-layout: default
-class: text-sm
----
-
-## Lab 1 - Review Checklist
-
-### Check These Files:
-
-**go.mod**
-```bash
-□ Correct module name?
-□ Dependencies match our needs?
-□ Versions are recent?
-```
-
-**docker-compose.yml**
-```bash
-□ PostgreSQL version specified?
-□ Volume for data persistence?
-□ Correct port mapping?
-```
-
-**main.go**
-```bash
-□ Error handling?
-□ Graceful shutdown?
-□ Env variables loaded?
-□ Follows .cursorrules patterns?
-```
-
-**Project Structure**
-```bash
-□ Matches .cursorrules architecture?
-□ Clean separation (handlers/services/database)?
-□ Naming conventions followed?
-```
-
----
-
-## Lab 1 - Verify Setup
-
-### Test It:
-
-```bash
-# Install dependencies
-go mod download
-
-# Verify it compiles
-go build -o bin/api cmd/api/main.go
-
-# Start database
-docker-compose up -d postgres
-
-# Verify database is running
-docker-compose ps
-```
-
-**Check: Does structure match YOUR .cursorrules?**
-
----
-
-## Lab 1 - Add API Documentation (Optional)
-
-### Make It Easy to Test Endpoints:
-
-**Prompt:**
-```
-"Add gin-swagger for API documentation:
-1. Add swag dependencies
-2. Add swagger comments to handlers
-3. Generate docs endpoint at /swagger/*
-4. Include example in README for running
-
-Follow Go swagger comment format."
-```
-
-### Result:
-```bash
-# Install swag CLI
-go install github.com/swaggo/swag/cmd/swag@latest
-
-# Generate docs
-swag init -g cmd/api/main.go
-
-# Run server
-go run cmd/api/main.go
-
-# Open browser: http://localhost:8080/swagger/index.html
-```
-
-**Now you can test endpoints interactively!**
-
----
-
-## Lab 1 - Key Takeaways
-
-✅ **.cursorrules defines YOUR standards first**  
-✅ **AI follows your rules** (not its assumptions)  
-✅ **Review everything** against .cursorrules  
-✅ **Test that it works**  
-✅ **.cursorrules is how YOU drive**  
-
-> ".cursorrules is your contract with AI"
 
 ---
 layout: center
