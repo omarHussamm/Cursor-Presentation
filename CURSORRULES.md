@@ -1,68 +1,174 @@
-# .cursorrules
+# Task Management App - Cursor AI Rules
 
+## Stack
+Next.js 15 (App Router) + TypeScript (strict) + Prisma + PostgreSQL + Shadcn UI + Tailwind + Zod + React Hook Form + pnpm
+
+## Architecture Flow
+Components (Server/Client) → Server Actions → Services → Prisma → PostgreSQL
+
+## Component Rules
+
+**Server Components (Default):**
+- Data fetching with async/await
+- Direct Prisma queries allowed
+- No 'use client' unless required
+- **IMPORTANT (Next.js 15):** Always await `params` and `searchParams` before accessing properties
+
+**Client Components ('use client'):**
+- Only for: forms, dialogs, interactive UI, client state
+- Use React Hook Form + Zod for forms
+- Import Shadcn components only
+
+**Server Actions ('use server'):**
+- All mutations (create/update/delete)
+- Validate with Zod, call services, revalidatePath()
+- Return: { success: boolean, data?: T, error?: string }
+
+## Directory Structure
 ```
-# Task Management API Standards
-
-## Project Context
-Task Management API built with Go, Gin, GORM, PostgreSQL
-
-## Architecture
-- Clean architecture: handlers → services → repositories
-- Handlers: HTTP concerns only (parse input, return response)
-- Services: Business logic, return domain errors
-- Repositories: Database access
+app/(dashboard)/tasks/     # Route group, task pages
+lib/actions/               # Server Actions
+lib/services/              # Business logic
+lib/db/                    # Prisma client
+lib/validations/           # Zod schemas
+components/ui/             # Shadcn only
+components/features/       # Feature components
+prisma/schema.prisma       # Database schema
+```
 
 ## Code Standards
-- Error handling: Always check errors, log with context
-- Naming: PascalCase (exported), camelCase (private)
-- Database: Use GORM, parameterized queries only
-- JSON tags: snake_case
-- No hardcoded values - use environment variables or constants
 
-## Testing
-- Table-driven tests
-- Test error cases, not just happy path
-- Mock external dependencies
-- Minimum 70% coverage
+**TypeScript:**
+- Strict mode always, no 'any'
+- Explicit types for params/returns
+- Interface for objects, type for unions
 
-## Security
-- Never log sensitive data (passwords, tokens, emails in logs)
-- Validate all user input before processing
-- Use environment variables for secrets
-- Sanitize user content to prevent XSS
-- Use parameterized queries to prevent SQL injection
-- Implement proper authorization checks
+**Naming:**
+- Components/Types: PascalCase (TaskForm, Task)
+- Functions/vars: camelCase (createTask, taskService)
+- Files: kebab-case (task-form.tsx)
+- Constants: UPPER_SNAKE_CASE (MAX_LENGTH)
 
-## API Documentation
-- Add Swagger/OpenAPI comments to all handlers
-- Format: // @Summary, @Description, @Param, @Success, @Failure
-- Keep swagger docs in sync with code
-- Document all request/response models
-- Include example values in model documentation
+**Server Actions Pattern:**
+```typescript
+'use server'
+export async function createTask(formData: FormData) {
+  try {
+    const data = taskSchema.parse({ /* parse formData */ })
+    const result = await taskService.createTask(data)
+    revalidatePath('/tasks')
+    return { success: true, data: result }
+  } catch (error) {
+    if (error instanceof z.ZodError) return { success: false, error: error.errors }
+    return { success: false, error: 'Failed to create task' }
+  }
+}
+```
 
-## Database
-- Use GORM for all database operations
-- Always use transactions for multiple operations
-- Add indexes on frequently queried fields
-- Use foreign key constraints
-- Handle concurrent updates properly
+**Service Layer:**
+- Pure TypeScript, no framework dependencies
+- Business logic only, throw meaningful errors
+- Return domain objects, not HTTP responses
+
+## Database (Prisma)
+
+**Schema:**
+- UUIDs: @id @default(uuid())
+- Timestamps: createdAt, updatedAt
+- Indexes on: foreign keys, frequently queried fields
+- Cascade delete where appropriate
+
+**Queries:**
+- Use select/include for specific fields only
+- Paginate lists (skip/take)
+- Handle not found errors
+
+## Validation (Zod)
+
+**Rules:**
+- Define once in lib/validations/, use everywhere
+- Validate on client AND server (never trust client)
+- Use z.coerce for FormData (returns strings)
+- Clear error messages for users
+
+## Security Checklist
+
+- [ ] Validate all input (Zod on client + server)
+- [ ] Sanitize user content (remove HTML/scripts)
+- [ ] Authorization checks in Server Actions
+- [ ] Never log passwords/tokens
+- [ ] Email validation with Zod .email()
+- [ ] Check ownership before update/delete
+- [ ] Use env vars for secrets
+
+**XSS Prevention:**
+```typescript
+content.replace(/<script[^>]*>.*?<\/script>/gi, '').replace(/<[^>]+>/g, '').trim()
+```
+
+**Authorization Pattern:**
+```typescript
+if (comment.authorEmail !== userEmail) {
+  return { success: false, error: 'Unauthorized' }
+}
+```
+
+## UI/UX Standards
+
+**Shadcn UI:**
+- Use Shadcn components only, customize via Tailwind
+- Don't modify component source files
+- Maintain ARIA attributes
+
+**Loading States:**
+- Suspense for Server Components: <Suspense fallback={<Skeleton />}>
+- useState for Client Components during actions
+- Disable buttons during submission
+
+**Error Handling:**
+- error.tsx for error boundaries ('use client')
+- Toast notifications for action feedback
+- Display validation errors inline in forms
+- Confirmation dialogs for destructive actions
+
+**User Feedback:**
+- Toast: success/error after actions
+- Optimistic updates where possible
+- Form reset after successful submit
+
+## Never Do This
+
+❌ API Routes (use Server Actions)
+❌ Client-side data fetching (use Server Components)
+❌ Inline styles (use Tailwind)
+❌ Custom UI from scratch (use Shadcn)
+❌ 'any' type
+❌ Silent errors (always handle + log)
+❌ Hardcoded values (use env/constants)
+❌ Mutations without revalidatePath()
+❌ Access params/searchParams directly without awaiting (Next.js 15)
+
+## When to Ask Questions
+
+Ask for clarification when:
+1. Business logic unclear: "Should deleted tasks also delete comments?"
+2. Multiple approaches valid: "Optimistic updates or loading states?"
+3. Security implications: "Allow anonymous comments?"
+4. Performance trade-offs: "Fetch all activities or paginate?"
+5. UX decisions: "Inline form or dialog?"
+
+**Format:**
+"I need clarification on [topic]. Context: [situation]. Options: A) [pros/cons] B) [pros/cons]. Which approach?"
 
 ## Error Handling
-- Return consistent error format: {"error": "message"}
-- Log errors with context (function name, operation, inputs)
-- Use appropriate HTTP status codes:
-  - 400: Bad Request (validation errors)
-  - 401: Unauthorized
-  - 403: Forbidden
-  - 404: Not Found
-  - 500: Internal Server Error
-- Never expose internal errors to users
 
-## When Unsure: ASK QUESTIONS
-Format: "I need clarification on [topic]. Should I [option A] or [option B]?"
+**Server Actions:**
+- Always try/catch
+- Log with context: { action, error, timestamp }
+- Return user-friendly messages
+- Don't expose internal errors
 
-Examples:
-- "Should user emails be case-sensitive or case-insensitive?"
-- "Should deleting a task also delete its comments (cascade) or prevent deletion?"
-- "Should the API support sorting? If yes, by which fields?"
-```
+**Never:**
+- Catch and ignore
+- Silent failures
+- Expose stack traces to users

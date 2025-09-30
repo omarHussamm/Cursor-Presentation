@@ -6,121 +6,126 @@
 As a user, I want to add comments to tasks so that I can collaborate and discuss work items with my team.
 
 ### Description
-Implement a commenting system where users can add, edit, and delete comments on tasks.
+Implement a commenting system with Server Actions, Prisma, and UI components where users can add, edit, and delete comments on tasks.
 
-### Comment Model
-```
-- ID: UUID (primary key)
-- TaskID: UUID (foreign key to tasks)
-- AuthorEmail: string (required, valid email)
-- Content: string (required, max 2000 chars)
-- CreatedAt: timestamp
-- UpdatedAt: timestamp
+### Comment Model (Prisma Schema)
+```prisma
+model Comment {
+  id          String   @id @default(uuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorName  String
+  authorEmail String
+  content     String   @db.VarChar(2000)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([taskId])
+}
+
+// Add to Task model:
+model Task {
+  // ... existing fields
+  comments    Comment[]
+}
 ```
 
-### API Endpoints
+### Server Actions
 
 **Add Comment**
-- `POST /api/v1/tasks/:id/comments`
-- Body: `{ "author_email": "user@example.com", "content": "This is a comment" }`
+- `addComment(taskId, formData)` - Server action
+- Validates author name, email, content
+- Sanitizes content for XSS prevention
+- Returns comment or validation errors
 
-**List Comments**
-- `GET /api/v1/tasks/:id/comments`
-- Returns comments in chronological order (oldest first)
+**Get Comments**
+- `getComments(taskId)` - Server action
+- Returns comments ordered by createdAt ASC (oldest first)
 
 **Update Comment**
-- `PUT /api/v1/tasks/:task_id/comments/:comment_id`
-- Body: `{ "content": "Updated comment" }`
+- `updateComment(commentId, formData)` - Server action
+- Checks authorization (email match)
+- Returns updated comment or error
 
 **Delete Comment**
-- `DELETE /api/v1/tasks/:task_id/comments/:comment_id`
+- `deleteComment(commentId, userEmail)` - Server action
+- Checks authorization (email match)
+- Deletes and revalidates
+
+### UI Components
+
+**Task Detail Page** (`app/(dashboard)/tasks/[id]/page.tsx`)
+- Display task details
+- Show comments list below task
+- Add comment form
+
+**Comments List** (`components/features/comments-list.tsx`)
+- Display all comments for a task
+- Show author name, email, timestamp
+- Edit/Delete buttons (only for comment author)
+
+**Comment Form** (`components/features/comment-form.tsx`)
+- Shadcn Form with React Hook Form
+- Fields: author name, author email, content (textarea)
+- Zod validation
+- Submit button with loading state
+
+**Comment Item** (`components/features/comment-item.tsx`)
+- Display single comment
+- Edit mode inline
+- Delete confirmation
+- Author verification UI
 
 ### Acceptance Criteria
 
 **Data Validation:**
+- [ ] Zod schema for comment validation
+- [ ] Author name is required
 - [ ] Author email is required and valid format
 - [ ] Content is required and not empty
 - [ ] Content max length 2000 characters
-- [ ] HTML/script tags sanitized (XSS prevention)
-- [ ] Invalid inputs return 400 with error message
-
-**API Responses:**
-- [ ] Create comment returns 201 with comment
-- [ ] List returns 200 with array (ordered by created_at ASC)
-- [ ] Update returns 200 or 404 if not found
-- [ ] Delete returns 204 or 404 if not found
-- [ ] Returns 404 if task doesn't exist
+- [ ] HTML/script tags sanitized (XSS prevention using DOMPurify or similar)
+- [ ] Client-side and server-side validation
+- [ ] Error messages displayed in form
 
 **Authorization:**
-- [ ] Only comment author can update their comment (403 otherwise)
-- [ ] Only comment author can delete their comment (403 otherwise)
-- [ ] Author identified by email in request
+- [ ] Only comment author can edit their comment
+- [ ] Only comment author can delete their comment
+- [ ] Author identified by email comparison
+- [ ] UI hides edit/delete buttons for non-authors
+- [ ] Server action validates authorization
+- [ ] Error message if unauthorized
 
 **Database:**
-- [ ] Foreign key constraint to tasks table
-- [ ] Index on `task_id` for performance
+- [ ] Prisma schema with Comment model
+- [ ] Foreign key constraint to Task
+- [ ] Index on `taskId` for performance
 - [ ] Cascade delete when task is deleted
+- [ ] Type-safe queries with Prisma
+
+**Server Actions:**
+- [ ] All comment actions use `'use server'`
+- [ ] Sanitize input before saving
+- [ ] Revalidate path after mutations
+- [ ] Return typed responses
+- [ ] Proper error handling
+
+**UI Components:**
+- [ ] Comments displayed on task detail page
+- [ ] Add comment form at bottom
+- [ ] Comments ordered chronologically (oldest first)
+- [ ] Edit comment inline
+- [ ] Delete with confirmation dialog
+- [ ] Loading states during actions
+- [ ] Optimistic updates for better UX
+- [ ] Responsive design
 
 **Code Quality:**
-- [ ] Follows clean architecture pattern
-- [ ] Input sanitization for XSS prevention
-- [ ] Parameterized queries (no SQL injection)
-- [ ] Proper error handling and logging
+- [ ] Server Components for data fetching
+- [ ] Client Components for forms/interactivity
+- [ ] Business logic in service layer
+- [ ] XSS prevention implemented
+- [ ] TypeScript strict types
+- [ ] No hardcoded values
 
 ---
-
-## Task 2.2: Add Activity Tracking
-
-### User Story
-As a user, I want to see a history of all changes made to a task so that I can track progress and audit changes.
-
-### Description
-Automatically track and log all task modifications (status changes, priority updates, assignee changes) for audit purposes.
-
-### Activity Model
-```
-- ID: UUID (primary key)
-- TaskID: UUID (foreign key to tasks)
-- UserEmail: string (user who made the change)
-- Action: string ["created", "status_changed", "priority_changed", "assigned"]
-- FieldName: string (optional - which field changed)
-- OldValue: string (optional)
-- NewValue: string (optional)
-- CreatedAt: timestamp
-```
-
-### API Endpoints
-
-**Get Task Activity Log**
-- `GET /api/v1/tasks/:id/activities`
-- Returns activities in reverse chronological order (newest first)
-
-### Acceptance Criteria
-
-**Auto-Tracking:**
-- [ ] Task creation generates "created" activity
-- [ ] Status change generates "status_changed" activity with old/new values
-- [ ] Priority change generates "priority_changed" activity with old/new values
-- [ ] Assignee change generates "assigned" activity with old/new values
-- [ ] Activities created automatically in service layer
-
-**API Response:**
-- [ ] Returns 200 with array of activities
-- [ ] Ordered by created_at DESC (newest first)
-- [ ] Returns 404 if task not found
-- [ ] Empty array if no activities
-
-**Database:**
-- [ ] Foreign key constraint to tasks table
-- [ ] Index on `task_id` and `created_at`
-- [ ] Activities are immutable (no update/delete)
-
-**Enhanced Task Response:**
-- [ ] `GET /api/v1/tasks/:id` includes `comments_count` field
-- [ ] `GET /api/v1/tasks/:id` includes `latest_activity` object
-
-**Code Quality:**
-- [ ] Activity creation integrated into update service
-- [ ] Tracks previous values before update
-- [ ] Handles concurrent updates gracefully
-- [ ] Proper error handling if activity logging fails

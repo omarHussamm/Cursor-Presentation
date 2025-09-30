@@ -3,175 +3,240 @@
 ## Prompt 1.1: Project Setup & Database Configuration
 
 ```
-Create a Go project structure for a Task Management API.
+Create a Next.js 15 full-stack project for a Task Management application.
 
 Technology Stack:
-- Go 1.21+ with Gin framework
-- GORM for database
+- Next.js 15 with App Router
+- pnpm as package manager
+- TypeScript (strict mode)
+- Shadcn UI + Tailwind CSS
 - PostgreSQL via Docker
+- Prisma ORM
 
 Project Structure:
-- cmd/api/main.go (entry point)
-- internal/handlers/ (HTTP handlers)
-- internal/services/ (business logic)
-- internal/repositories/ (database access)
-- internal/models/ (data models)
-- internal/database/ (DB connection)
-- config/ (configuration)
-- .env.example (environment variables template)
-- docker-compose.yml (PostgreSQL only)
-- Makefile (with run, build, docker-up commands)
+app/
+  ├── (dashboard)/        # Route group for dashboard
+  │   └── tasks/         # Tasks pages
+  ├── layout.tsx
+  └── page.tsx           # Homepage
+lib/
+  ├── actions/           # Server actions
+  ├── services/          # Business logic
+  ├── db/               # Prisma client & utilities
+  └── validations/      # Zod schemas
+components/
+  ├── ui/               # Shadcn UI components
+  └── features/         # Feature-specific components
+prisma/
+  └── schema.prisma     # Database schema
+.env.example
+docker-compose.yml
 
 Architecture Requirements:
-- Follow clean architecture: handlers → services → repositories
-- Handlers: only HTTP concerns (parse input, return JSON response)
-- Services: business logic only, return domain errors
-- Repositories: database access only
+- Use App Router with Server Components as default
+- Server Actions for mutations (no API routes)
+- Client Components only when needed (forms, interactivity)
+- Architecture flow: components → server actions → services → database
+- Services: business logic only
+- Database access: Prisma client in lib/db/
 
-Code Standards:
-- Use Go modules (go.mod)
-- PascalCase for exported functions/types
-- camelCase for private functions/variables
-- JSON tags in snake_case
-- Environment variables for all configuration
-- Proper error handling with context
+Code Standards & Naming Conventions:
+- TypeScript strict mode enabled, no 'any' types
+- Use 'use server' directive for Server Actions
+- Use 'use client' only when necessary (forms, interactivity)
+- Async Server Components for data fetching
 
-Database:
-- PostgreSQL connection from environment variables
-- Connection pooling configured
-- Health check endpoint: GET /health
+Naming:
+- Components/Types: PascalCase (TaskForm, Task, CreateTaskInput)
+- Functions/variables: camelCase (createTask, taskService, userId)
+- Files: kebab-case (task-form.tsx, task-service.ts, task-actions.ts)
+- Constants: UPPER_SNAKE_CASE (MAX_TITLE_LENGTH, DATABASE_URL)
+- Prisma models: PascalCase (Task, Comment)
+- Prisma fields: camelCase (createdAt, assigneeName)
+
+Error Handling:
+- Always use try-catch in Server Actions
+- Return typed responses: { success: boolean, data?: T, error?: string }
+- Never silent failures - always inform user or log
+- No hardcoded values - use constants or env vars
+
+Setup Steps:
+1. Initialize Next.js 15 with TypeScript: npx create-next-app@latest --typescript --tailwind --app --use-pnpm
+2. Install and initialize Shadcn UI: pnpm dlx shadcn@latest init
+3. Install Prisma: pnpm add prisma @prisma/client
+4. Initialize Prisma: pnpm prisma init
+5. Create docker-compose.yml with PostgreSQL
+6. Configure .env with DATABASE_URL
 
 Deliverables:
-- Complete project structure
-- Database connection established
-- Main.go that starts the server on port 8080
-- Makefile with: run, build, docker-up commands
+- Complete Next.js 15 project structure
+- Shadcn UI configured with Tailwind
+- Docker Compose with PostgreSQL
+- Prisma configured and connected
+- pnpm dev starts the application
+- Basic homepage renders at /
 - .env.example with all required variables
 ```
 
 ---
 
-## Prompt 1.2: Implement Task CRUD API
+## Prompt 1.2: Implement Task CRUD with UI
 
 ```
-@files internal/models/
-@files internal/handlers/
-@files internal/services/
-@files internal/repositories/
+@files prisma/schema.prisma
+@files lib/actions/
+@files lib/services/
+@files lib/validations/
+@files components/features/
+@files app/(dashboard)/tasks/
 
-Implement complete CRUD API for Task management.
+Implement complete Task CRUD functionality with Server Actions, Prisma, and UI.
 
-Task Model (internal/models/task.go):
-- ID: UUID (primary key)
-- Title: string (required, max 200 chars)
-- Description: string (optional)
-- Status: string enum ["todo", "in_progress", "done"]
-- Priority: integer (1-5, 5 is highest)
-- AssigneeEmail: string (optional, valid email)
-- CreatedAt: timestamp
-- UpdatedAt: timestamp
-- Add database indexes on status and priority fields
+Step 1: Prisma Schema (prisma/schema.prisma)
 
-API Endpoints to implement:
+Create Task model:
+- id: String @id @default(uuid())
+- title: String @db.VarChar(200)
+- description: String? @db.Text
+- status: TaskStatus enum (TODO, IN_PROGRESS, DONE) @default(TODO)
+- priority: Int @default(3)
+- assigneeName: String?
+- assigneeEmail: String?
+- createdAt: DateTime @default(now())
+- updatedAt: DateTime @updatedAt
+- Add indexes on status and priority
 
-1. POST /api/v1/tasks
-   - Create new task
-   - Validate: title required, status enum, priority 1-5, email format
-   - Return 201 with created task or 400 with error
+Run: pnpm prisma migrate dev --name init
 
-2. GET /api/v1/tasks
-   - List all tasks with pagination
-   - Query params: page (default 1), page_size (default 20)
-   - Return 200 with array of tasks
+Step 2: Zod Validation (lib/validations/task.ts)
 
-3. GET /api/v1/tasks/:id
-   - Get single task by ID
-   - Return 200 with task or 404 if not found
+Create taskSchema with zod:
+- title: required, min 1, max 200 chars
+- description: optional string
+- status: enum ['TODO', 'IN_PROGRESS', 'DONE']
+- priority: number between 1-5
+- assigneeName: optional string
+- assigneeEmail: optional email validation
 
-4. PUT /api/v1/tasks/:id
-   - Update task (all fields optional)
-   - Validate same as create
-   - Return 200 with updated task or 404
+Step 3: Service Layer (lib/services/task-service.ts)
 
-5. DELETE /api/v1/tasks/:id
-   - Delete task
-   - Return 204 on success or 404
+Create TaskService class with methods:
+- getTasks(page, pageSize): fetch paginated tasks
+- getTaskById(id): fetch single task
+- createTask(data): create new task
+- updateTask(id, data): update existing task
+- deleteTask(id): delete task
+
+Use Prisma client from lib/db/prisma.ts
+Return typed responses with error handling
+
+Step 4: Server Actions (lib/actions/task-actions.ts)
+
+Create server actions with 'use server':
+
+1. createTask(formData: FormData)
+   - Parse and validate with Zod
+   - Call TaskService.createTask()
+   - revalidatePath('/tasks')
+   - Return success or validation errors
+
+2. getTasks(page = 1, pageSize = 20)
+   - Call TaskService.getTasks()
+   - Return tasks array
+
+3. getTaskById(id: string)
+   - Call TaskService.getTaskById()
+   - Return task or null
+
+4. updateTask(id: string, formData: FormData)
+   - Parse and validate with Zod
+   - Call TaskService.updateTask()
+   - revalidatePath('/tasks')
+   - Return updated task or errors
+
+5. deleteTask(id: string)
+   - Call TaskService.deleteTask()
+   - revalidatePath('/tasks')
+   - Return success
+
+Step 5: UI Components
+
+Install Shadcn components:
+pnpm dlx shadcn@latest add button form input select textarea label card badge
+
+Create components:
+
+1. Task List Page (app/(dashboard)/tasks/page.tsx)
+   - Server Component
+   - Fetch tasks using getTasks()
+   - Display in cards or table
+   - Add pagination controls
+   - "Create Task" button
+
+2. Task Form (components/features/task-form.tsx)
+   - Client Component ('use client')
+   - Use Shadcn Form + React Hook Form + Zod
+   - Fields: title (input), description (textarea), status (select), priority (select 1-5), assigneeName (input), assigneeEmail (input)
+   - On submit: call createTask() server action
+   - Show validation errors
+   - Loading state on submit button
+
+3. Task Item (components/features/task-item.tsx)
+   - Display task with status badge
+   - Edit and Delete buttons
+   - Use Shadcn Dialog for edit form
+   - Confirmation dialog for delete
 
 Architecture Requirements:
-- TaskHandler in internal/handlers/task_handler.go
-  - Only HTTP concerns: parse request, call service, return response
-  - Validate request data
-  
-- TaskService in internal/services/task_service.go
-  - Business logic: validation, transformations
-  - Return domain errors (not HTTP errors)
-  
-- TaskRepository in internal/repositories/task_repository.go
-  - Database operations using GORM
-  - Use parameterized queries only
-  - Handle database errors
+- Server Components for data fetching (no client-side fetch)
+- Server Actions for all mutations (no API routes)
+- Client Components only for forms and interactivity
+- Business logic in service layer (lib/services/)
+- Database access via Prisma (lib/db/)
+- Zod validation on both client AND server (never trust client)
 
-Code Standards:
-- All errors must be handled and logged with context
-- Input validation before processing
-- Use GORM for all database operations
-- No SQL injection (parameterized queries only)
-- Return consistent error JSON: {"error": "message"}
-- No hardcoded values
+Code Standards & Naming:
+- All server actions use 'use server' directive
+- TypeScript strict mode, no 'any' types
+- Files: kebab-case (task-form.tsx, task-actions.ts)
+- Functions/vars: camelCase (createTask, taskList)
+- Components/Types: PascalCase (TaskForm, Task)
+- Constants: UPPER_SNAKE_CASE (MAX_PRIORITY)
+
+Validation & Security:
+- Validate on client (UX) AND server (security)
+- Use Zod schemas in lib/validations/
+- Email validation with Zod .email()
+- Input length limits (title max 200 chars)
+- Sanitize user input if displaying HTML
 
 Error Handling:
-- Invalid UUID: return 400
-- Task not found: return 404  
-- Validation errors: return 400 with specific message
-- Database errors: log and return 500
-```
+- All Server Actions: try-catch with typed returns
+- Return: { success: boolean, data?: T, error?: string }
+- Revalidate paths after mutations: revalidatePath('/tasks')
+- Display errors to user (toast or form errors)
+- Never silent failures
+- Log errors with context: { action, error, timestamp }
 
----
+Database (Prisma):
+- Use UUIDs: @id @default(uuid())
+- Add indexes on: foreign keys, status, priority
+- Timestamps: createdAt, updatedAt
+- Use select/include for specific fields only
 
-## Prompt 1.3: Add Swagger Documentation
-
-```
-@files internal/handlers/task_handler.go
-
-Add Swagger/OpenAPI documentation to all task endpoints.
-
-Requirements:
-1. Add swagger annotations to all handler functions
-2. Document all request/response models
-3. Include example values for all fields
-4. Document all possible error responses (400, 404, 500)
-
-Swagger Annotation Format:
-- @Summary: Brief description
-- @Description: Detailed explanation
-- @Tags: Task Management
-- @Accept: json
-- @Produce: json
-- @Param: For path/query/body parameters
-- @Success: Success responses with model
-- @Failure: Error responses
-- @Router: Endpoint path and method
-
-Setup Required:
-- Install swag: github.com/swaggo/swag
-- Install gin-swagger: github.com/swaggo/gin-swagger
-- Add swagger handler to main.go at /swagger/*
-- Generate docs command in Makefile: swag init -g cmd/api/main.go
-
-Example for Create Task:
-// @Summary Create a new task
-// @Description Create a new task with title, description, status, priority
-// @Tags Task Management
-// @Accept json
-// @Produce json
-// @Param task body models.Task true "Task object"
-// @Success 201 {object} models.Task
-// @Failure 400 {object} map[string]string
-// @Router /api/v1/tasks [post]
+UI/UX:
+- Shadcn components only (no custom UI from scratch)
+- Responsive design with Tailwind
+- Loading states with Suspense boundaries
+- Disable buttons during submission
+- Error boundaries for graceful error handling
+- Toast notifications for user feedback
 
 Deliverables:
-- All endpoints documented with swagger comments
-- Swagger UI accessible at /swagger/index.html
-- All models documented with example values
-- Can test all endpoints through Swagger UI
+- Working task list page at /tasks
+- Create, read, update, delete functionality
+- Form validation with error messages
+- Optimistic UI updates
+- Proper loading and error states
 ```
+

@@ -3,213 +3,186 @@
 ## Prompt 2.1: Add Task Comments Feature
 
 ```
-@files internal/models/
-@files internal/handlers/
-@files internal/services/
-@files internal/repositories/
+@files prisma/schema.prisma
+@files lib/actions/
+@files lib/services/
+@files lib/validations/
+@files components/features/
+@files app/(dashboard)/tasks/[id]/
 @files .cursorrules
 
-Implement a commenting system for tasks.
+Implement a commenting system for tasks with Server Actions and UI.
 
 Follow all standards defined in .cursorrules file.
 
-Comment Model (internal/models/comment.go):
-- ID: UUID (primary key)
-- TaskID: UUID (foreign key to tasks)
-- AuthorEmail: string (required, valid email)
-- Content: string (required, max 2000 chars)
-- CreatedAt: timestamp
-- UpdatedAt: timestamp
-- Database: foreign key to tasks, index on task_id, cascade delete
+Step 1: Update Prisma Schema (prisma/schema.prisma)
 
-API Endpoints:
+Add Comment model:
+```prisma
+model Comment {
+  id          String   @id @default(uuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorName  String
+  authorEmail String
+  content     String   @db.VarChar(2000)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-1. POST /api/v1/tasks/:id/comments
-   - Body: {"author_email": "user@example.com", "content": "comment text"}
-   - Validate: email format, content not empty, max 2000 chars
-   - Sanitize content (prevent XSS - remove/escape HTML tags)
-   - Return 201 with comment or 400/404
+  @@index([taskId])
+}
+```
 
-2. GET /api/v1/tasks/:id/comments
-   - List all comments for task
-   - Order by created_at ASC (oldest first)
-   - Return 200 with array or 404 if task not found
+Update Task model - add relation:
+```prisma
+model Task {
+  // ... existing fields
+  comments    Comment[]
+}
+```
 
-3. PUT /api/v1/tasks/:task_id/comments/:comment_id
-   - Body: {"content": "updated text"}
-   - Authorization: only author can update (check author_email)
-   - Return 200 or 403 (forbidden) or 404
+Run: pnpm prisma migrate dev --name add-comments
 
-4. DELETE /api/v1/tasks/:task_id/comments/:comment_id
-   - Authorization: only author can delete
-   - Return 204 or 403 or 404
+Step 2: Zod Validation (lib/validations/comment.ts)
+
+Create commentSchema:
+- authorName: required string, min 1 char
+- authorEmail: required email format
+- content: required, min 1, max 2000 chars
+- Sanitize content to prevent XSS (remove HTML/script tags)
+
+Step 3: Service Layer (lib/services/comment-service.ts)
+
+Create CommentService with methods:
+- getComments(taskId): fetch comments for task (ordered by createdAt ASC)
+- createComment(taskId, data): create new comment
+- updateComment(commentId, content, userEmail): update if authorized
+- deleteComment(commentId, userEmail): delete if authorized
+- checkAuthorization(commentId, userEmail): verify comment ownership
+
+Step 4: Server Actions (lib/actions/comment-actions.ts)
+
+1. addComment(taskId: string, formData: FormData)
+   - Parse and validate with Zod
+   - Sanitize content (use DOMPurify or regex to strip HTML)
+   - Call CommentService.createComment()
+   - revalidatePath(`/tasks/${taskId}`)
+   - Return success or errors
+
+2. getComments(taskId: string)
+   - Call CommentService.getComments()
+   - Return comments array ordered oldest first
+
+3. updateComment(commentId: string, formData: FormData)
+   - Get current user email from formData
+   - Check authorization: comment.authorEmail === userEmail
+   - If not authorized: return { success: false, error: 'Unauthorized' }
+   - Update comment content
+   - revalidatePath()
+   - Return success or error
+
+4. deleteComment(commentId: string, userEmail: string)
+   - Check authorization
+   - If not authorized: return error
+   - Delete comment
+   - revalidatePath()
+   - Return success
+
+Step 5: UI Components
+
+Install Shadcn components:
+pnpm dlx shadcn@latest add textarea avatar alert-dialog
+
+1. Task Detail Page (app/(dashboard)/tasks/[id]/page.tsx)
+   - Server Component
+   - Fetch task with comments using getTaskById()
+   - Display task details
+   - Render CommentsList component
+   - Render CommentForm component
+
+2. Comments List (components/features/comments-list.tsx)
+   - Client Component
+   - Display comments chronologically (oldest first)
+   - Each comment shows: author name, email, content, timestamp
+   - Edit/Delete buttons only visible to comment author
+   - Use Avatar for author initials
+
+3. Comment Form (components/features/comment-form.tsx)
+   - Client Component with Shadcn Form
+   - Fields: authorName (input), authorEmail (input), content (textarea)
+   - Zod validation
+   - On submit: call addComment() server action
+   - Clear form after success
+   - Show toast notification
+
+4. Comment Item (components/features/comment-item.tsx)
+   - Display single comment
+   - Edit mode: inline textarea
+   - Delete: confirmation dialog ("Are you sure?")
+   - Only show edit/delete if email matches current user
+   - Format timestamp as relative time (e.g., "2 hours ago")
+
+Step 6: Security Implementation
+
+1. XSS Prevention:
+```typescript
+// lib/utils/sanitize.ts
+export function sanitizeContent(content: string): string {
+  // Remove HTML tags and script content
+  return content
+    .replace(/<script[^>]*>.*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .trim();
+}
+```
+
+2. Authorization Check:
+```typescript
+// In server action
+const comment = await prisma.comment.findUnique({ where: { id: commentId } });
+if (comment.authorEmail !== userEmail) {
+  return { success: false, error: 'Unauthorized' };
+}
+```
+
+3. UI Authorization:
+```typescript
+// Only show edit/delete if user is author
+{comment.authorEmail === currentUserEmail && (
+  <div>
+    <Button onClick={handleEdit}>Edit</Button>
+    <Button onClick={handleDelete}>Delete</Button>
+  </div>
+)}
+```
 
 Requirements:
-- Follow .cursorrules architecture pattern
-- CommentHandler → CommentService → CommentRepository
-- Sanitize HTML/script tags in content (XSS prevention)
-- Email validation using proper library
-- Authorization check: compare author_email in comment with request
-- Return 403 if user tries to modify someone else's comment
-- Proper error handling and logging per .cursorrules
-- Add swagger documentation per .cursorrules standards
+- Follow .cursorrules architecture
+- Server Actions for all comment operations
+- XSS prevention: sanitize all content
+- Email validation with Zod
+- Authorization: only author can edit/delete
+- Return 403-equivalent error if unauthorized
+- Proper error handling and toast notifications
+- Client Components for forms/interactivity
+- Server Components for data fetching
 
 Security Checklist:
-□ XSS prevention: sanitize content
-□ SQL injection: parameterized queries
-□ Email validation
-□ Authorization checks on update/delete
-□ Input length validation
+□ XSS prevention: sanitize content before save
+□ SQL injection: Prisma handles this automatically
+□ Email validation with Zod
+□ Authorization checks in server actions
+□ Input length validation (max 2000 chars)
+□ UI hides edit/delete from non-authors
+
+Deliverables:
+- Comment model in Prisma
+- Server actions for CRUD operations
+- Comments displayed on task detail page
+- Add/edit/delete functionality with authorization
+- XSS prevention implemented
+- Toast notifications for feedback
+- Confirmation dialog for delete
 ```
 
 ---
-
-## Prompt 2.2: Add Activity Tracking
-
-```
-@files internal/models/
-@files internal/services/task_service.go
-@files internal/repositories/
-@files .cursorrules
-
-Implement automatic activity tracking for task changes.
-
-Follow all standards in .cursorrules file.
-
-Activity Model (internal/models/activity.go):
-- ID: UUID (primary key)
-- TaskID: UUID (foreign key to tasks)
-- UserEmail: string (who made the change)
-- Action: string ["created", "status_changed", "priority_changed", "assigned"]
-- FieldName: string (optional - which field changed)
-- OldValue: string (optional)
-- NewValue: string (optional)
-- CreatedAt: timestamp
-- Database: foreign key to tasks, index on task_id and created_at
-
-API Endpoint:
-
-GET /api/v1/tasks/:id/activities
-- List all activities for task
-- Order by created_at DESC (newest first)
-- Return 200 with array or 404 if task not found
-
-Auto-Tracking Logic (update TaskService):
-1. Before updating task, get current values
-2. After update, compare old vs new values
-3. Create activity records for each change:
-   - Status changed: action="status_changed", old/new values
-   - Priority changed: action="priority_changed", old/new values
-   - Assignee changed: action="assigned", old/new values
-4. When task created: action="created"
-
-Enhanced Task Response:
-- Modify GET /api/v1/tasks/:id to include:
-  - "comments_count": integer
-  - "latest_activity": activity object (optional, most recent)
-
-Implementation Requirements:
-- ActivityRepository for database operations
-- Integrate into existing TaskService.UpdateTask method
-- Activities are immutable (no update/delete endpoints)
-- Handle case where multiple fields change in one update
-- If activity logging fails, log error but don't fail the update
-- Follow .cursorrules architecture and error handling
-- Add swagger documentation per .cursorrules
-
-Integration Points:
-- TaskService.CreateTask → create "created" activity
-- TaskService.UpdateTask → compare old/new, create change activities
-- Use transactions if needed for consistency
-```
-
----
-
-## Prompt 2.3: Self-Review with Cursor
-
-```
-@git
-
-Review all my changes for Lab 2 against .cursorrules standards.
-
-Check the following:
-
-1. Architecture Compliance
-   □ Handlers only handle HTTP concerns?
-   □ Business logic in services?
-   □ Database access in repositories?
-   □ Proper separation of concerns?
-
-2. Security Review
-   □ XSS prevention implemented in comments?
-   □ SQL injection prevented (parameterized queries)?
-   □ Email validation secure?
-   □ Authorization checks present on update/delete?
-   □ Sensitive data not logged?
-
-3. Code Quality
-   □ Error handling follows .cursorrules?
-   □ Consistent error JSON format?
-   □ Proper HTTP status codes?
-   □ All errors logged with context?
-   □ No hardcoded values?
-
-4. Edge Cases
-   □ What if task is deleted while comments exist?
-   □ What if comment content is only whitespace?
-   □ What if invalid email format?
-   □ What if multiple fields change simultaneously?
-   □ Concurrent updates handled?
-
-5. Documentation
-   □ Swagger annotations on all new endpoints?
-   □ Request/response models documented?
-   □ Error responses documented?
-
-Provide:
-1. List of issues found with severity (critical/major/minor)
-2. Specific code locations with problems
-3. Suggested fixes for each issue
-```
-
----
-
-## Prompt 2.4: Generate PR Description
-
-```
-@git
-
-Create a professional pull request description for Lab 2 changes.
-
-Include:
-
-1. Summary
-   - What features were added
-   - Why these features are needed
-
-2. Changes Made
-   - List of files added/modified
-   - Brief explanation of each change
-
-3. Technical Details
-   - Database schema changes
-   - New API endpoints
-   - Architecture decisions
-
-4. Testing
-   - How to test the new features
-   - Edge cases covered
-
-5. Security Considerations
-   - XSS prevention
-   - Authorization implemented
-   - Input validation
-
-6. Breaking Changes
-   - Any API changes that affect existing clients
-   - Migration steps if needed
-
-Format using conventional commits style.
-Use clear sections with headers.
-Keep it concise but comprehensive.
-```

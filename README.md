@@ -1,5 +1,5 @@
 # Cursor AI Workshop
-## Building a Task Management API with Golang
+## Building a Task Management App with Next.js
 
 **90-Minute Technical Workshop**  
 **Philosophy:** YOU drive, AI assists. You are responsible for what ships.
@@ -70,9 +70,10 @@ Complete workshop guide with:
 
 ### Prerequisites
 - Cursor installed
-- Go 1.21+ installed
+- Node.js 18+ installed
+- pnpm installed (`npm install -g pnpm`)
 - Docker & Docker Compose
-- Basic Go knowledge
+- Basic TypeScript/React knowledge
 - Node.js (for running the presentation)
 
 ### For Presenters
@@ -106,21 +107,23 @@ Complete workshop guide with:
 
 **Lab 1: Initialize App (15 min)**
 - Create .cursorrules (YOUR standards)
-- Generate project structure
-- Add Swagger API docs
-- Verify setup
+- Generate Next.js 15 project
+- Set up Prisma + Shadcn UI
+- Build task CRUD with UI
+- Add loading & error states
 
-**Lab 2: Task Filtering (20 min)**
+**Lab 2: Comments & Activity Tracking (20 min)**
 - Define acceptance criteria
-- Generate code with AI
-- Review against .cursorrules
+- Add comments with authorization
+- Implement activity tracking
+- Security review (XSS prevention)
 - Self-review with Cursor
 - Generate PR description
 
 **Lab 3: Database with MCP (15 min)**
 - Set up read-only PostgreSQL MCP
 - Inspect database schema
-- Generate GORM models
+- Generate Prisma models
 - Find missing indexes
 
 ---
@@ -221,7 +224,9 @@ Before accepting AI code:
 **Official:**
 - cursor.sh/docs
 - modelcontextprotocol.io
-- go.dev/doc/effective_go
+- nextjs.org/docs
+- prisma.io/docs
+- ui.shadcn.com
 
 **Community:**
 - forum.cursor.sh
