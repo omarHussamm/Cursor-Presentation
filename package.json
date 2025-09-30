@@ -1,0 +1,26 @@
+{
+  "name": "cursor-presentation",
+  "version": "1.0.0",
+  "description": "**90-Minute Technical Workshop**   **Philosophy:** YOU drive, AI assists. You are responsible for what ships.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "slidev PRESENTATION_SLIDES.md --port 3030",
+    "build": "slidev build PRESENTATION_SLIDES.md",
+    "export": "slidev export PRESENTATION_SLIDES.md"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omarHussamm/Cursor-Presentation.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/omarHussamm/Cursor-Presentation/issues"
+  },
+  "homepage": "https://github.com/omarHussamm/Cursor-Presentation#readme",
+  "devDependencies": {
+    "@slidev/cli": "^52.2.4",
+    "@slidev/theme-default": "^0.25.0"
+  }
+}

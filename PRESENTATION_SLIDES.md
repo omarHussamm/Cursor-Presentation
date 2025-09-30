@@ -1,31 +1,30 @@
+---
+theme: default
+background: https://source.unsplash.com/collection/94734566/1920x1080
+class: text-center
+highlighter: shiki
+lineNumbers: false
+info: |
+  ## Using Cursor AI in Development
+  90-Minute Technical Workshop on Building a Task Management API with Golang
+drawings:
+  persist: false
+transition: slide-left
+title: Using Cursor AI in Development
+mdc: true
+---
+
 # Using Cursor AI in Development
 ## Building a Task Management API with Golang
 
-**90-Minute Technical Workshop**
+**Technical Workshop**
+
 
 ---
-
-## Slide 1: The Contract
-
-# YOU are the driver
-# AI is the copilot
-# YOU are responsible for what ships
-
+layout: two-cols
 ---
 
-**This workshop is about:**
-✅ Using AI as a powerful **assistant**  
-✅ Maintaining **code quality** and **security**  
-✅ Knowing when to trust AI vs when to take control  
-
-**NOT about:**
-❌ Blindly accepting AI suggestions  
-❌ Copy-paste development  
-❌ Letting AI make decisions  
-
----
-
-## Slide 2: What We're Building
+## What We're Building
 
 ### Task Management API
 
@@ -34,65 +33,85 @@
 - GORM ORM + PostgreSQL
 - Docker for database
 
+**The golden rule:**
+- You are the driver. AI is the copilot.
+
+::right::
+
+## This Workshop
+
+**About:**
+- ✅ Using AI as a powerful **assistant**
+- ✅ Maintaining **code quality** and **security**
+- ✅ Knowing when to trust AI vs when to take control
+
+**NOT about:**
+- ❌ Blindly accepting AI suggestions
+- ❌ Copy-paste development
+
+
 ---
 
-## Slide 3: Workshop Flow
+## Workshop Agenda
+- Understanding Cursor
+- Setting Standards (.cursorrules)
+- Lab 1: Initialize app
+- Lab 2: Task filtering with review cycle
+- MCP explanation
+- Lab 3: Database with MCP
+- Critical lessons
+- Q&A
 
-```
-10 min  - Understanding Cursor
-        ↓
-10 min  - Setting Standards (.cursorrules)
-        ↓
-15 min  - Lab 1: Initialize app
-        ↓
-20 min  - Lab 2: Task filtering with review cycle
-        ↓
-8 min   - MCP explanation
-        ↓
-15 min  - Lab 3: Database with MCP
-        ↓
-5 min   - Critical lessons
-        ↓
-7 min   - Q&A
-
-Total: 90 minutes
-```
-
+---
+layout: center
+class: text-center
 ---
 
 # Part 1: Understanding Cursor
 
 ---
 
-## Slide 4: Cursor Basics
+## Cursor Basics
 
 ### What is Cursor?
+
 - VS Code fork with native AI
 - Context-aware pair programmer
 - Multiple AI models available
 - Monitor usage: Settings → Models
 
 ---
+layout: two-cols
+class: text-sm
+---
 
-## Slide 5: Four Ways to Use Cursor
+## Four Ways to Use Cursor
+
+<br>
 
 ### 1. Inline Edit (Cmd/Ctrl + K)
 ```
-Select code → Cmd+K → Describe change → Review → Accept/Reject
+Select code → Cmd+K
+Describe change → Accept
 ```
 Fast, targeted edits
 
 ### 2. Chat Panel (Cmd/Ctrl + L)
 ```
-Ask questions, get examples, understand code
+Ask questions
+Get examples
+Understand code
 ```
 Exploratory learning
 
+::right::
+
 ### 3. Autocomplete (Tab)
 ```
-Type → AI suggests → Tab to accept
+Type → AI suggests
+Tab to accept
 ```
-Fastest for patterns (but verify!)
+Fastest for patterns (verify!)
 
 ### 4. Composer (Cmd/Ctrl + I)
 ```
@@ -101,18 +120,25 @@ Multi-file operations
 Use sparingly, high mistake rate
 
 ---
+layout: two-cols
+class: text-sm
+---
 
-## Slide 6: Context is Everything
+## Context is Everything
+
+::left::
 
 ### The @ Commands
 
 ```
-@codebase    - Search entire project (slow, broad)
-@files       - Specific files (fast, targeted)
-@folder      - Directory (medium scope)
-@git         - Git history/diffs
-@docs        - External documentation
+@codebase - Search project (slow)
+@files    - Specific files (fast)
+@folder   - Directory
+@git      - Git history/diffs
+@docs     - External docs
 ```
+
+::right::
 
 ### Example
 
@@ -120,45 +146,70 @@ Use sparingly, high mistake rate
 
 ✅ **Specific:**
 ```
-"@files auth_handler.go Fix JWT token validation 
-to check expiration. Use jwt-go library in go.mod. 
-Follow error handling in @files error_handler.go"
+"@files auth_handler.go 
+Fix JWT token validation 
+to check expiration.
+
+Follow error handling in 
+@files error_handler.go"
 ```
 
 ---
+layout: two-cols
+class: text-sm
+---
 
-## Slide 7: AI Makes Mistakes
+## AI Makes Mistakes
+
+::left::
 
 ### Common Errors
 
 **Outdated libraries:**
 ```go
-import "github.com/dgrijalva/jwt-go"  // ❌ Deprecated
-import "github.com/golang-jwt/jwt/v5" // ✅ Current
+// ❌ Deprecated
+import "github.com/dgrijalva/jwt-go"
+
+// ✅ Current
+import "github.com/golang-jwt/jwt/v5"
 ```
 
 **Security issues:**
 ```go
-db.Where("id = " + input)      // ❌ SQL injection
-db.Where("id = ?", input)      // ✅ Safe
+// ❌ SQL injection
+db.Where("id = " + input)
+
+// ✅ Safe
+db.Where("id = ?", input)
 ```
+
+::right::
 
 **Over-engineering:**
 ```
 Ask: "validate email"
-Get: 200 lines of regex, DNS check, disposable detection
+
+Get: 200 lines of regex,
+     DNS check,
+     disposable detection
+
 Need: validator.IsEmail(email)
 ```
 
-### Always Review!
+<br>
 
+### 🔍 Always Review!
+
+---
+layout: center
+class: text-center
 ---
 
 # Setting Standards: .cursorrules
 
 ---
 
-## Slide 8: .cursorrules - You Define the Standards
+## .cursorrules - You Define the Standards
 
 ### What is .cursorrules?
 
@@ -172,12 +223,16 @@ Need: validator.IsEmail(email)
 > **This is how YOU drive. AI follows YOUR rules.**
 
 ---
+layout: two-cols
+---
 
-## Slide 9: Creating Your .cursorrules
+## Creating Your .cursorrules
 
 ### Task: Define Project Standards (10 min)
 
 **Create `.cursorrules` with:**
+
+::left::
 
 ```markdown
 # Task Management API Standards
@@ -201,18 +256,20 @@ Task Management API built with Go, Gin, GORM, PostgreSQL
 - Table-driven tests
 - Test error cases, not just happy path
 - Mock external dependencies
-- Minimum 70% coverage
+```
 
+::right::
+
+```markdown
 ## Security
 - Never log sensitive data
 - Validate all user input
 - Use environment variables for secrets
 
 ## API Documentation
-- Add Swagger/OpenAPI comments to all handlers
-- Format: // @Summary, @Description, @Param, @Success, @Failure
-- Keep swagger docs in sync with code
-- Document all request/response models
+- Add Swagger/OpenAPI comments
+- Format: @Summary, @Param, @Success
+- Keep docs in sync with code
 
 ## When Unsure: ASK QUESTIONS
 Format: "I need clarification on [topic]. 
@@ -221,7 +278,7 @@ Should I [option A] or [option B]?"
 
 ---
 
-## Slide 10: Review Your .cursorrules
+## Review Your .cursorrules
 
 ### Checklist:
 
@@ -239,13 +296,16 @@ Should I [option A] or [option B]?"
 Save it in project root before Lab 1!
 
 ---
+layout: center
+class: text-center
+---
 
 # Lab 1: Initialize Golang App
 ## 15 minutes
 
 ---
 
-## Slide 11: Lab 1 - Objective
+## Lab 1 - Objective
 
 **Goal:** Set up production-ready Go API structure
 
@@ -263,7 +323,7 @@ Save it in project root before Lab 1!
 
 ---
 
-## Slide 12: Lab 1 - The Prompt
+## Lab 1 - The Prompt
 
 ```
 Create a Go project structure for Task Management API.
@@ -289,8 +349,11 @@ Requirements:
 **Execute in Cursor chat after creating .cursorrules**
 
 ---
+layout: default
+class: text-sm
+---
 
-## Slide 13: Lab 1 - Review Checklist
+## Lab 1 - Review Checklist
 
 ### Check These Files:
 
@@ -325,7 +388,7 @@ Requirements:
 
 ---
 
-## Slide 14: Lab 1 - Verify Setup
+## Lab 1 - Verify Setup
 
 ### Test It:
 
@@ -347,7 +410,7 @@ docker-compose ps
 
 ---
 
-## Slide 14b: Lab 1 - Add API Documentation (Optional)
+## Lab 1 - Add API Documentation (Optional)
 
 ### Make It Easy to Test Endpoints:
 
@@ -380,7 +443,7 @@ go run cmd/api/main.go
 
 ---
 
-## Slide 15: Lab 1 - Key Takeaways
+## Lab 1 - Key Takeaways
 
 ✅ **.cursorrules defines YOUR standards first**  
 ✅ **AI follows your rules** (not its assumptions)  
@@ -391,98 +454,134 @@ go run cmd/api/main.go
 > ".cursorrules is your contract with AI"
 
 ---
+layout: center
+class: text-center
+---
 
 # The Review Process
 
 ---
+layout: default
+class: text-sm
+---
 
-## Slide 16: The Review Workflow
+## The Review Workflow
 
 ### Every Time AI Generates Code:
 
-```
-1. READ the code (don't just accept)
-   ↓
-2. ASK yourself:
-   - Do I understand this?
-   - Follows .cursorrules patterns?
-   - Edge cases handled?
-   - Secure? Efficient?
-   ↓
-3. TEST it
-   - Compiles? Runs? Handles errors?
-   ↓
-4. VERIFY against requirements
-   - Solves actual problem?
-   - Better approaches?
-   ↓
-5. FIX or REJECT
-   - Fix yourself or ask Cursor to fix
-```
+<div class="grid grid-cols-5 gap-4 mt-4">
+
+**1. READ**
+- Don't just accept
+- Understand the code
+
+**2. ASK**
+- Do I understand?
+- Follows .cursorrules?
+- Edge cases?
+
+**3. TEST**
+- Compiles?
+- Runs?
+- Handles errors?
+
+**4. VERIFY**
+- Solves problem?
+- Better approaches?
+
+**5. FIX/REJECT**
+- Fix yourself
+- Or ask Cursor
+
+</div>
 
 ---
+layout: two-cols
+class: text-sm
+---
 
-## Slide 17: Using Specific Context
+## Using Specific Context
+
+::left::
 
 ### Be Specific:
 
 ❌ **Too Broad:**
 ```
-"@codebase add filtering to tasks"
+"@codebase add filtering"
 ```
 
 ✅ **Specific:**
 ```
 "@files handlers/task_handler.go 
 @files services/task_service.go 
-Add task filtering to GET /tasks endpoint:
-- Query params: status, priority, due_date
-- Validate status is valid enum
-- Support multiple filters combined
-- Return filtered results
-- Follow .cursorrules patterns"
+
+Add task filtering:
+- Query params: status, priority
+- Validate status enum
+- Support combined filters
+- Follow .cursorrules"
 ```
+
+::right::
 
 ### For PRs:
 
 ```
-"@git Review changes in task filtering.
-Check: validation, edge cases, performance."
+"@git Review changes.
+
+Check:
+- Validation
+- Edge cases
+- Performance
 ```
 
 ---
+layout: two-cols
+class: text-sm
+---
 
-## Slide 18: Code Review with Cursor
+## Code Review with Cursor
 
-### Use Cursor to Review Your Own Code:
+::left::
 
-**Prompt:**
+### Self-Review Prompt:
+
 ```
 "@git Review my changes for:
-1. Compliance with .cursorrules standards
-2. Edge cases I might have missed
+
+1. .cursorrules compliance
+2. Edge cases missed
 3. Performance issues
 4. Security concerns
-5. Code quality issues
+5. Code quality
 
-Task requirements: [paste acceptance criteria]"
+Requirements: 
+[paste criteria]"
 ```
+
+::right::
 
 ### Generate PR Description:
 
-**Prompt:**
 ```
-"@git Generate PR description for these changes:
-- Explain what was implemented
-- List files changed
-- Note any breaking changes
-- Mention testing approach
+"@git Create PR description:
 
-Follow conventional commit format."
+- What was implemented
+- Files changed
+- Breaking changes
+- Testing approach
+
+Use conventional commits"
 ```
 
-**Remember: Cursor reviews, YOU make final call**
+<br>
 
+**Cursor reviews, YOU decide**
+
+---
+layout: center
+class: text-center
 ---
 
 # Lab 2: Task Filtering with Review Cycle
@@ -490,7 +589,7 @@ Follow conventional commit format."
 
 ---
 
-## Slide 19: Lab 2 - Objective
+## Lab 2 - Objective
 
 **Task:** Add task filtering and sorting to GET /tasks endpoint
 
@@ -505,43 +604,40 @@ Follow conventional commit format."
 **Focus:** Complete workflow, from requirements to PR
 
 ---
+layout: default
+class: text-sm
+---
 
-## Slide 20: Lab 2 - Part A: Define Requirements
+## Lab 2 - Part A: Define Requirements
 
 ### Acceptance Criteria:
 
-```
-Feature: Task Filtering and Sorting
+**Feature: Task Filtering and Sorting**
 
-As a user, I want to filter my tasks so I can find specific ones quickly.
-
-Acceptance Criteria:
-1. GET /tasks supports query parameters:
-   - status: filter by status (pending/in_progress/completed)
-   - priority: filter by priority (1-5)
-   - sort_by: sort field (created_at/priority/due_date)
-   - order: sort order (asc/desc)
+1. **GET /tasks** supports query parameters:
+   - `status`: pending/in_progress/completed
+   - `priority`: 1-5
+   - `sort_by`: created_at/priority/due_date
+   - `order`: asc/desc
 
 2. Multiple filters can be combined
-3. Invalid status values return 400 with error
-4. Priority must be 1-5, else 400 error
-5. Default sort: created_at desc
+3. Invalid status → 400 error
+4. Invalid priority → 400 error
+5. Default: `created_at desc`
 6. Returns paginated results
-```
 
 ---
+layout: default
+class: text-sm
+---
 
-## Slide 21: Lab 2 - Part B: Generate Code
+## Lab 2 - Part B: Generate Code
 
-### Step 1: Update Task Model (if needed)
+### Step 1: Update Task Model
 
 ```
 @files internal/models/task.go
-Review Task model. Ensure it has:
-- Status field with valid values
-- Priority field (int)
-- DueDate field
-- Proper indexes for filtering
+Ensure: Status, Priority, DueDate fields + indexes
 ```
 
 ### Step 2: Service Layer
@@ -549,28 +645,29 @@ Review Task model. Ensure it has:
 ```
 @files internal/services/task_service.go
 Add filtering to GetTasks:
-- Accept filters: status, priority, sortBy, order
+- Accept: status, priority, sortBy, order
 - Validate filter values
-- Build GORM query with filters
+- Build GORM query
 - Return filtered & sorted tasks
-- Follow .cursorrules error handling
 ```
 
 ### Step 3: Handler
 
 ```
 @files internal/handlers/task_handler.go
-Update GET /tasks handler:
-- Parse query parameters
-- Validate parameters (status enum, priority range)
-- Call service with filters
+Update GET /tasks:
+- Parse query params
+- Validate (status enum, priority range)
+- Call service
 - Return 400 for invalid params
-- Follow .cursorrules patterns
 ```
 
 ---
+layout: default
+class: text-sm
+---
 
-## Slide 22: Lab 2 - Part C: Review & Test
+## Lab 2 - Part C: Review & Test
 
 ### Review Against .cursorrules:
 
@@ -583,83 +680,95 @@ Update GET /tasks handler:
 □ No hardcoded values?
 ```
 
-### Common Issues to Check:
+### Common Issues:
 
 ```go
-// ❌ Watch for: No validation
-status := c.Query("status")  // What if invalid?
-
-// ✅ Should be:
+// ❌ No validation
 status := c.Query("status")
+
+// ✅ Validate
 if status != "" && !isValidStatus(status) {
-    c.JSON(400, gin.H{"error": "Invalid status"})
-    return
-}
-
-// ❌ Watch for: SQL injection in sorting
-db.Order(sortBy + " " + order)  // Dangerous!
-
-// ✅ Should be:
-allowedSorts := map[string]bool{
-    "created_at": true, "priority": true, "due_date": true,
-}
-if !allowedSorts[sortBy] {
-    sortBy = "created_at"  // Safe default
+    return c.JSON(400, gin.H{"error": "Invalid"})
 }
 ```
 
+```go
+// ❌ SQL injection
+db.Order(sortBy + " " + order)
+
+// ✅ Safe whitelist
+allowedSorts := map[string]bool{"created_at": true}
+if !allowedSorts[sortBy] { sortBy = "created_at" }
+```
+
+---
+layout: default
+class: text-sm
 ---
 
-## Slide 23: Lab 2 - Part D: Generate Tests
+## Lab 2 - Part D: Generate Tests
 
 ### Prompt:
 
 ```
-@files tests/task_test.go Create tests for task filtering:
+@files tests/task_test.go 
+Create tests for task filtering:
 
 Test cases:
-1. Filter by status - returns only matching tasks
-2. Filter by priority - returns only matching priority
-3. Combined filters - both conditions applied
-4. Invalid status - returns 400 error
-5. Invalid priority - returns 400 error
+1. Filter by status - matching tasks only
+2. Filter by priority - matching priority
+3. Combined filters - both applied
+4. Invalid status - 400 error
+5. Invalid priority - 400 error
 6. Sort by created_at asc - correct order
 7. Sort by priority desc - correct order
-8. No filters - returns all user tasks
+8. No filters - all user tasks
 
-Use table-driven tests, mock database, testify/assert
+Use table-driven tests, mock DB, testify
 ```
 
 ---
+layout: two-cols
+class: text-sm
+---
 
-## Slide 24: Lab 2 - Part E: Use Cursor for Review
+## Lab 2 - Part E: Use Cursor for Review
 
-### Self-Review with Cursor:
+::left::
+
+### Self-Review:
 
 ```
-"@git Review my task filtering implementation:
+"@git Review my implementation:
 
 Acceptance Criteria:
-[paste the criteria from Slide 20]
+[paste criteria]
 
-Check for:
-1. All acceptance criteria met?
-2. Edge cases handled?
-3. Follows .cursorrules?
-4. Performance issues?
-5. Security concerns?"
+Check:
+1. Criteria met?
+2. Edge cases?
+3. .cursorrules?
+4. Performance?
+5. Security?"
 ```
 
-### Generate PR Description:
+::right::
+
+### PR Description:
 
 ```
-"@git Create PR description for task filtering feature.
-Include: what changed, why, testing approach, any notes for reviewer."
+"@git Create PR description:
+
+Include:
+- What changed
+- Why
+- Testing approach
+- Notes for reviewer"
 ```
 
 ---
 
-## Slide 25: Lab 2 - Debrief
+## Lab 2 - Debrief
 
 ### Discussion:
 
@@ -680,12 +789,15 @@ Include: what changed, why, testing approach, any notes for reviewer."
 > "Requirements + Standards + Review = Quality"
 
 ---
+layout: center
+class: text-center
+---
 
 # MCP (Model Context Protocol)
 
 ---
 
-## Slide 26: What is MCP?
+## What is MCP?
 
 ### Model Context Protocol = Cursor Plugins
 
@@ -704,61 +816,83 @@ Cursor AI ←→ MCP Server ←→ External Resource
 ### Official servers only!
 
 ---
+layout: two-cols
+class: text-sm
+---
 
-## Slide 27: ⚠️ MCP Security Dangers
+## ⚠️ MCP Security Dangers
+
+::left::
 
 ### Critical Risks:
 
-**Database Access:**
-```
-MCP can:
-✓ Read all data (including sensitive)
-✓ Modify records
-✓ Delete data
-✓ Drop tables
+**MCP can:**
+- ✓ Read all data (sensitive!)
+- ✓ Modify records
+- ✓ Delete data
+- ✓ Drop tables
 
-AI might accidentally:
-❌ "Clean test data" → Deletes real users
-❌ "Optimize table" → Drops index
-```
+**AI accidents:**
+- ❌ "Clean test data" → Deletes users
+- ❌ "Optimize" → Drops index
+
+::right::
 
 **Credential Exposure:**
+
 ```json
 // ❌ BAD
-{"env": {"DB_PASSWORD": "secret123"}}
+{"env": {
+  "DB_PASSWORD": "secret123"
+}}
 
 // ✅ GOOD
-{"env": {"POSTGRES_CONNECTION": "${DATABASE_URL}"}}
+{"env": {
+  "POSTGRES_CONNECTION": "${DATABASE_URL}"
+}}
 ```
 
 ---
+layout: two-cols
+class: text-sm
+---
 
-## Slide 28: MCP Security Rules
+## MCP Security Rules
+
+::left::
 
 ### 🛡️ Always:
 
-```
-□ Use READ-ONLY database user
-□ Never use production credentials
-□ Audit MCP source code first
-□ Use only official MCP servers
-□ Least-privilege access
-□ Don't store credentials in config
-□ Test in safe environment
-```
+- □ Use READ-ONLY database user
+- □ Never use production credentials
+- □ Audit MCP source code first
+- □ Official MCP servers only
+- □ Least-privilege access
+- □ No credentials in config
+- □ Test in safe environment
+
+::right::
 
 ### Setup Read-Only User:
 
 ```sql
-CREATE USER cursor_readonly WITH PASSWORD 'safe';
-GRANT CONNECT ON DATABASE taskdb TO cursor_readonly;
-GRANT USAGE ON SCHEMA public TO cursor_readonly;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO cursor_readonly;
+CREATE USER cursor_readonly 
+WITH PASSWORD 'safe';
+
+GRANT CONNECT ON DATABASE taskdb 
+TO cursor_readonly;
+
+GRANT USAGE ON SCHEMA public 
+TO cursor_readonly;
+
+GRANT SELECT ON ALL TABLES 
+IN SCHEMA public 
+TO cursor_readonly;
 ```
 
 ---
 
-## Slide 29: MCP Setup
+## MCP Setup
 
 ### Installation:
 
@@ -787,7 +921,7 @@ npm install -g @modelcontextprotocol/server-postgres
 
 ---
 
-## Slide 30: MCP Best Practices
+## MCP Best Practices
 
 ### ✅ Good Uses:
 
@@ -809,13 +943,16 @@ npm install -g @modelcontextprotocol/server-postgres
 > Use MCP for **inspection**, not **modification**
 
 ---
+layout: center
+class: text-center
+---
 
 # Lab 3: Database with MCP
 ## 15 minutes
 
 ---
 
-## Slide 31: Lab 3 - Objective
+## Lab 3 - Objective
 
 **Task:** Use MCP to analyze DB and create models
 
@@ -830,7 +967,7 @@ npm install -g @modelcontextprotocol/server-postgres
 
 ---
 
-## Slide 32: Lab 3 - Setup
+## Lab 3 - Setup
 
 ### Start Database:
 
@@ -862,7 +999,7 @@ mkdir -p .cursor
 
 ---
 
-## Slide 33: Lab 3 - Tasks
+## Lab 3 - Tasks
 
 ### Task 1: Inspect Schema
 
@@ -900,7 +1037,7 @@ Include Up and Down migrations
 
 ---
 
-## Slide 34: Lab 3 - Review
+## Lab 3 - Review
 
 ### Verify Models Match DB:
 
@@ -938,7 +1075,7 @@ go run cmd/migrate/main.go up
 
 ---
 
-## Slide 35: Lab 3 - Debrief
+## Lab 3 - Debrief
 
 ### Was MCP Helpful?
 
@@ -959,32 +1096,35 @@ go run cmd/migrate/main.go up
 ❌ Never for direct DB modifications  
 
 ---
+layout: center
+class: text-center
+---
 
 # Critical Lessons
 
 ---
+layout: two-cols
+class: text-sm
+---
 
-## Slide 36: You Must Drive
+## You Must Drive
+
+::left::
 
 ### The Hierarchy:
 
-```
-1. YOU define architecture
-   ↓
-2. YOU write requirements  
-   ↓
-3. AI generates code
-   ↓
-4. YOU review everything
-   ↓
-5. YOU fix issues
-   ↓
-6. YOU are responsible
-```
+1. **YOU** define architecture
+2. **YOU** write requirements
+3. **AI** generates code
+4. **YOU** review everything
+5. **YOU** fix issues
+6. **YOU** are responsible
+
+::right::
 
 ### Clear Prompts = Better Results
 
-Specify:
+**Specify:**
 - Technologies & versions
 - Architecture patterns
 - Error handling
@@ -993,31 +1133,20 @@ Specify:
 - Performance needs
 
 ---
+layout: two-cols
+class: text-sm
+---
 
-## Slide 37: The Bad Fix Problem
+## The Bad Fix Problem
+
+::left::
 
 ### What Happens:
 
-```
 1. You ask AI to implement X
 2. AI tries approach A → fails
-3. AI tries approach B → fails  
-4. AI does HACKY workaround C → "works" but terrible
-```
-
-### Example:
-
-```go
-// AI should do:
-db.Preload("User").First(&task, id)
-
-// AI got stuck, did this instead:
-db.First(&task, id)  // ❌ Ignore error
-var user User
-db.First(&user, task.UserID)  // ❌ N+1 query
-task.User = user
-return &task, nil  // ❌ Always nil error
-```
+3. AI tries approach B → fails
+4. AI does HACKY workaround → "works" but terrible
 
 ### How to Detect:
 
@@ -1027,46 +1156,82 @@ return &task, nil  // ❌ Always nil error
 - Comments like "workaround"
 - **Your instinct: "this feels wrong"**
 
+::right::
+
+### Example:
+
+```go
+// AI should do:
+db.Preload("User").First(&task, id)
+
+// AI got stuck, did this:
+db.First(&task, id)  // ❌ Ignore
+var user User
+db.First(&user, task.UserID)  // ❌ N+1
+task.User = user
+return &task, nil  // ❌ Always nil
+```
+
+---
+layout: two-cols
+class: text-sm
 ---
 
-## Slide 38: When AI Can Drive
+## When AI Can Drive
 
-### ✅ Low Risk (AI can drive):
+::left::
+
+### ✅ Low Risk:
 
 **Documentation**
 - README, API docs, comments
-- Easy to review, can't break production
+- Easy to review
+- Can't break production
 
 **POCs & Demos**
 - Throw-away code
 - Speed > quality
 
+::right::
+
 **One-time Scripts**
-- Used once, reviewed before running
+- Used once
+- Reviewed before running
 
 **Boilerplate**
-- Project structure, initial models
+- Project structure
+- Initial models
 - With thorough review!
 
 ---
+layout: two-cols
+class: text-sm
+---
 
-## Slide 39: When YOU Must Drive
+## When YOU Must Drive
 
-### ⚠️ High Risk (YOU drive):
+::left::
+
+### ⚠️ High Risk:
 
 **Production Business Logic**
-- Core features, complex algorithms
+- Core features
+- Complex algorithms
 - Security-critical code
 - YOU understand requirements
 
 **Tests (Controversial!)**
 - Tests evolve with code
-- AI doesn't track context changes
+- AI doesn't track context
 - Maintaining AI tests is hard
-- Better: YOU write, AI helps edge cases
+- Better: YOU write, AI helps
+
+::right::
 
 **Architecture Decisions**
-- Scaling, tech choices, patterns
+- Scaling
+- Tech choices
+- Patterns
 - Long-term implications
 
 **Database Schema**
@@ -1075,36 +1240,44 @@ return &task, nil  // ❌ Always nil error
 - AI doesn't know your data
 
 ---
+layout: two-cols
+class: text-sm
+---
 
-## Slide 40: The Testing Reality
+## The Testing Reality
+
+::left::
 
 ### Many Think:
 > "AI can write all my tests!"
 
 ### Reality:
 
-```
-❌ Tests are NOT write-once
-❌ Business logic changes → tests change
-❌ AI-written tests you don't understand
-❌ Maintenance = nightmare
-❌ End up rewriting anyway
-```
+- ❌ Tests are NOT write-once
+- ❌ Business logic changes → tests change
+- ❌ AI-written tests you don't understand
+- ❌ Maintenance = nightmare
+- ❌ End up rewriting anyway
+
+::right::
 
 ### Better Approach:
 
-```
-✅ YOU write test structure
-✅ AI helps with test cases
-✅ AI suggests edge cases
-✅ YOU maintain ownership
-```
+- ✅ YOU write test structure
+- ✅ AI helps with test cases
+- ✅ AI suggests edge cases
+- ✅ YOU maintain ownership
+
+<br>
 
 > If it's hard to maintain when broken, **YOU drive**
 
 ---
+layout: default
+class: text-sm
+---
 
-## Slide 41: ⚠️ AI Tool Dependency Warning (Don't Get Addicted!)
+## ⚠️ AI Tool Dependency Warning
 
 ### The 4 Stages (Don't Let This Be You!):
 
@@ -1147,7 +1320,7 @@ return &task, nil  // ❌ Always nil error
 
 ---
 
-## Slide 42: Final Wisdom
+## Final Wisdom
 
 ### The Rules:
 
@@ -1174,12 +1347,15 @@ return &task, nil  // ❌ Always nil error
 ```
 
 ---
+layout: center
+class: text-center
+---
 
 # Q&A & Resources
 
 ---
 
-## Slide 43: Common Questions
+## Common Questions
 
 **Q: Will AI replace developers?**  
 A: No. Developers who use AI will replace those who don't.
@@ -1202,7 +1378,7 @@ A: Same as human bugs
 
 ---
 
-## Slide 44: Resources
+## Resources
 
 ### Official:
 - cursor.sh/docs
@@ -1229,7 +1405,7 @@ Esc             Reject
 
 ---
 
-## Slide 45: What to Remember
+## What to Remember
 
 ### Best Practices:
 
@@ -1250,7 +1426,7 @@ Esc             Reject
 
 ---
 
-## Slide 46: Next Steps
+## Next Steps
 
 ### This Week:
 
@@ -1272,10 +1448,13 @@ Esc             Reject
 ### Remember: Start small, scale gradually
 
 ---
+layout: center
+class: text-center
+---
 
-## Slide 47: Thank You!
+# Thank You!
 
-# Questions?
+## Questions?
 
 **Stay Connected:**
 - Workshop repo: github.com/yourorg/cursor-workshop
@@ -1291,14 +1470,4 @@ YOU are responsible
 ```
 
 **Happy coding! 🚀**
-
----
-
-# End of Presentation
-
-**Slides:** 48  
-**Time:** ~90 minutes  
-**Format:** Interactive workshop with 3 hands-on labs  
-
-*Remember: YOU drive. AI assists. Don't become dependent. Stay sharp!*
 

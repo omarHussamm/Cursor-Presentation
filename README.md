@@ -44,17 +44,43 @@ Complete workshop guide with:
 
 ## 🚀 Quick Start
 
+### Running the Presentation
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Run the presentation in development mode:**
+   ```bash
+   npm run dev
+   ```
+   The presentation will be available at `http://localhost:3030`
+
+3. **Build for production:**
+   ```bash
+   npm run build
+   ```
+   Output will be in the `dist/` directory
+
+4. **Export as PDF:**
+   ```bash
+   npm run export
+   ```
+
 ### Prerequisites
 - Cursor installed
 - Go 1.21+ installed
 - Docker & Docker Compose
 - Basic Go knowledge
+- Node.js (for running the presentation)
 
 ### For Presenters
-1. Read `PRESENTATION_SLIDES.md`
-2. Study `PRESENTATION_OUTLINE.md`
-3. Practice labs 1-3
-4. Prepare prompts & .cursorrules example
+1. Run the presentation: `npm run dev`
+2. Read `PRESENTATION_SLIDES.md`
+3. Study `PRESENTATION_OUTLINE.md`
+4. Practice labs 1-3
+5. Prepare prompts & .cursorrules example
 
 ### For Participants
 1. Follow `PRESENTATION_SLIDES.md`
